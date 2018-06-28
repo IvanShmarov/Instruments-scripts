@@ -1,4 +1,6 @@
 import visa # Importing Virtual Instrument Module
+import random
+import time
 
 
 ResM = visa.ResourceManager() # Create a resource manager
@@ -38,24 +40,23 @@ if K:
         print("Now, the language is: " + lang)
 
     
-    K.write(":SYST:BEEP:IMM 250, 0.5") # Trying to beep to check that SCPI works
-
-    K.write("""*RST;
-TRAC:MAKE \"MyBuffer\", 300;
-SOUR:FUNC VOLT;
-SOUR:VOLT:RANG 20;
-SOUR:VOLT:ILIM 0.02;
-SENS:FUNC "CURR";
-SENS:CURR:RANG 25e-3;
-SOUR:SWE:VOLT:LIN 0, -5, 101, 10e-3, 1, BEST, OFF, ON, "MyBuffer";
-INIT;
-*WAI;
-""")
-    data_len = K.query("TRAC:ACT? \"MyBuffer\";")[:-1]
-    data = K.query("TRAC:DATA? 1, " + data_len + ", \"MyBuffer\", SOUR, READ, REL;")
-    real_data = [float(item) for item in data.split(",")]
-    V = real_data[0::3]
-    I = real_data[1::3]
-    t = real_data[2::3]
-    for item in zip(V,I,t):
-        print(item)
+    #K.write(":SYST:BEEP:IMM 250, 0.5") # Trying to beep to check that SCPI works
+    octave = [261.626, 277.183, 293.665, 311.127, 329.628, 349.228, 369.994, 391.995, 415.305, 440, 466.164, 493.883]
+    i = 0
+    j = 0
+    t = 0.5
+    d = 0.25
+    while True:
+        i = random.randint(0,len(octave) - 1)
+        j = random.randint(0,1)
+        root = octave[i]
+        minor = (root, 32*root/27, 3*root/2)
+        major = (root, 81*root/64, 3*root/2)
+        notes = [major,minor]
+        print("Start for ", root)
+        print("For notes ", j)
+        for note in notes[j]:
+            K.write(":SYST:BEEP:IMM "+str(note)+", "+str(t))
+            time.sleep(t)
+        print("End for ", root)
+        time.sleep(d)
