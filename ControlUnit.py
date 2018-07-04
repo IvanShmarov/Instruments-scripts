@@ -44,10 +44,34 @@ DrawVoltageAxisRangeEntryValue.set("2.0")
 DrawCurrentAxisRangeEntryValue = tkinter.StringVar()
 DrawCurrentAxisRangeEntryValue.set("25e-3")
 
+CreatorEntryValue = tkinter.StringVar()
+CreatorEntryValue.set("")
+
+LabelEntryValue = tkinter.StringVar()
+LabelEntryValue.set("")
+
+CompositionEntryValue = tkinter.StringVar()
+CompositionEntryValue.set("")
+
+LightEntryValue = tkinter.StringVar()
+LightEntryValue.set("")
+
+PixelEntryValue = tkinter.StringVar()
+PixelEntryValue.set("")
+
+AutoSaveVariable = tkinter.BooleanVar()
+AutoSaveVariable.set(False)
+
 RAW_DATA = ""
+scan_time = None
+scan_type = -1
 Voltage = []
 Current = []
 delta_time = []
+minVoltage = 0.0
+maxVoltage = 0.0
+CurrentLimmit = 0.0
+TimeIncrement = 0.0
 
 
 # IMPORTANT VARIABLES END
@@ -89,6 +113,9 @@ def FUNC_KEITHLEY_STATUS_CHANGE(*args):
     if KeithleyReadyStatus.get():
         KeithleyStatusLabel["text"] = "Ready"
         KeithleyStatusLabel["bg"] = "#00ff00"
+        ScanButton["state"] = tkinter.NORMAL
+        ScanButton["text"] = "Scan"
+        ScanButton["bg"] = "#00ff00"
     else:
         KeithleyStatusLabel["text"] = "Not Ready"
         KeithleyStatusLabel["bg"] = "#ff0000"
@@ -110,17 +137,20 @@ def FUNC_MERCURY_STATUS_CHANGE(*args):
 def FUNC_SCANNING_STATUS_CHANGE(*args):
     global ScanningStatus
     global ScanButton
+    global SaveButton
     print(args)
     if ScanningStatus.get():
         ScanButton["state"] = tkinter.DISABLED
         ScanButton["text"] = "Scanning"
         ScanButton["bg"] = "#ff0000"
+        SaveButton["state"] = tkinter.DISABLED
     else:
         DataProcessingThread = threading.Thread(target=THREAD_DATA_PROCESSING)
         DataProcessingThread.start()
         ScanButton["state"] = tkinter.NORMAL
         ScanButton["text"] = "SCAN"
         ScanButton["bg"] = "#00ff00"
+        SaveButton["state"] = tkinter.NORMAL
 
 def FUNC_REFRESH_INST_BUTTON(*args):
     FindKeithleyThread = threading.Thread(target=THREAD_FIND_KEITHLEY, name="FINDING KEITHLEY")
@@ -133,6 +163,49 @@ def FUNC_REFRESH_INST_BUTTON(*args):
 def FUNC_REDRAW_BUTTON():
     DrawThread = threading.Thread(target=THREAD_DRAW_DATA, name="DRAWING DATA")
     DrawThread.start()
+
+def FUNC_SAVE_BUTTON():
+    global CreatorEntryValue
+    global LabelEntryValue
+    global CompositionEntryValue
+    global LightEntryValue
+    global PixelEntryValue
+    global scan_time
+    global Voltage
+    global Current
+    global delta_time
+    global minVoltage
+    global maxVOltage
+    global CurrentLimit
+    global TimeIncrement
+    print("Saving into file")
+    file_name = LabelEntryValue.get() + "_" + str(scan_time.tm_yday) + "_" + str(scan_time.tm_year) + "_" + "%02d" % scan_time.tm_hour + "%02d" % scan_time.tm_min + "%02d" % scan_time.tm_sec + ".txt"
+    output_file = open(file_name, "w")
+    output_file.write("Min Voltage: " + minVoltage + ";\n")
+    output_file.write("Max Voltage: " + maxVoltage + ";\n")
+    output_file.write("Current Limit: " + CurrentLimit + ";\n")
+    output_file.write("Time Increment: " + TimeIncrement + ";\n")
+    output_file.write("Creator: " + CreatorEntryValue.get() + ";\n")
+    output_file.write("Label: " + LabelEntryValue.get() + ";\n")
+    output_file.write("Composition: " + CompositionEntryValue.get() + ";\n")
+    output_file.write("Date: " + time.asctime(scan_time) + ";\n")
+    output_file.write("Light Intensity: " + LightEntryValue.get() + ";\n")
+    output_file.write("Scan type: ")
+    if scan_type == 0:
+        output_file.write("FORWARD;\n")
+    elif scan_type == 1:
+        output_file.write("BACKWARD;\n")
+    elif scan_type == 2:
+        output_file.write("FORWARD->BACKWARD;\n")
+    elif scan_type == 3:
+        output_file.write("BACKWARD->FORWARD;\n")
+    output_file.write("Pixel: " + PixelEntryValue.get() + ";\n")
+    output_file.write("Voltage/ V, Current/ A, Time/ s;\n")
+    for point in zip(Voltage, Current, delta_time):
+        output_file.write(str(point[0]) + "," + str(point[1]) + "," + str(point[2]) + ";\n")
+
+    output_file.close()
+    print("File saved: ", file_name)
     
     
     
@@ -143,6 +216,9 @@ def THREAD_FIND_KEITHLEY():
     global Keithley
     global KeithleyReadyStatus
     global ResMan
+
+    # Nullifying the Keithley
+    Keithley = None 
 
     # Creating a resource manager
     # Getting the list of all instruments
@@ -175,6 +251,8 @@ def THREAD_FIND_MERCURY():
     global MercuryReadyStatus
     global ResMan
 
+    Mercury = None
+
     list_of_instruments = ResMan.list_resources()
     
     for item in list_of_instruments:
@@ -206,6 +284,16 @@ def THREAD_SCAN():
     global BothWayScan
     global ScanningStatus
     global RAW_DATA
+    global scan_time
+    global scan_type
+    global minVoltage
+    global maxVoltage
+    global CurrentLimit
+    global TimeIncrement
+    minVoltage = str(min( float(StartVoltageEntryValue.get()), float(EndVoltageEntryValue.get()) ))
+    maxVoltage = str(max( float(StartVoltageEntryValue.get()), float(EndVoltageEntryValue.get()) ))
+    CurrentLimit = CurrentLimitValue.get()
+    TimeIncrement = TimeIncrementEntryValue.get()
     print("Constructing a command")
     command = """*RST;
 TRAC:MAKE \"IVAN_BUFFER\", 300;
@@ -220,10 +308,16 @@ SENS:FUNC "CURR";
     sweep_command += EndVoltageEntryValue.get() + ", "
     sweep_command += NumberOfPointsEntryValue.get() + ", "
     sweep_command += TimeIncrementEntryValue.get() + ", 1, BEST, OFF, "
+    if float(EndVoltageEntryValue.get()) >= float(StartVoltageEntryValue.get()):
+        scan_type = 0
+    else:
+        scan_type = 1
     if BothWayScan.get():
         sweep_command += "ON, "
+        scan_type += 2
     else:
         sweep_command += "OFF, "
+            
     sweep_command += "\"IVAN_BUFFER\";"
     command += sweep_command + "\n"
     command += "INIT;\n*WAI;"
@@ -235,6 +329,7 @@ SENS:FUNC "CURR";
     RAW_DATA = Keithley.query("TRAC:DATA? 1, " + data_len
                                 + ", \"IVAN_BUFFER\", SOUR, READ, REL;")
     #Keithley.write("*RST")
+    scan_time = time.gmtime()
     ScanningStatus.set(False)
 
 def THREAD_DATA_PROCESSING():
@@ -242,6 +337,7 @@ def THREAD_DATA_PROCESSING():
     global Voltage
     global Current
     global delta_time
+    global AutoSaveVariable
     print("Processing Results")
     if RAW_DATA:
         # EXTRACTING DATA
@@ -249,6 +345,8 @@ def THREAD_DATA_PROCESSING():
         Current = [float(item) for item in RAW_DATA.split(",")[1::3]]
         delta_time = [float(item) for item in RAW_DATA.split(",")[2::3]]
         print("Results are processed")
+    if AutoSaveVariable.get():
+        FUNC_SAVE_BUTTON()
     FUNC_REDRAW_BUTTON()
 
 def THREAD_DRAW_DATA():
@@ -258,6 +356,7 @@ def THREAD_DRAW_DATA():
     global DrawOriginSettings
     global DrawVoltageAxisRangeEntryValue
     global DrawCurrentAxisRangeEntryValue
+    global scan_type
     
     ResultCanvas.delete(*ResultCanvas.find_withtag("plot"))
     canvas_width = float(ResultCanvas["width"])
@@ -306,13 +405,23 @@ def THREAD_DRAW_DATA():
                                  fill="#aaaaaa", tags=("plot","axis"))
         ResultCanvas.create_text(10, (dy*j)/y_range*(canvas_width-20)+y_origin, anchor=tkinter.NW, text="%2.2e"%(-dy*j), tags=("plot", "axis"))
 
+
     if Voltage and Current:
         x_points = [v/x_range * (canvas_width-20) + x_origin for v in Voltage]
         y_points = [-i/y_range * (canvas_height-20) + y_origin for i in Current]
 
-        ResultCanvas.create_line(list(zip(x_points, y_points)),
-                                 fill="#1010ff", width=2,
-                                 tags=("plot"))
+        if scan_type < 2:
+            ResultCanvas.create_line(list(zip(x_points, y_points)),
+                                     fill="#"+"101010".replace('10','FF', scan_type*2 + 1).replace("FF", "10", scan_type * 2), width=2,
+                                     tags=("plot"))
+        else:
+            half = math.ceil( len(x_points)/2 )
+            ResultCanvas.create_line(list(zip(x_points[:half+1], y_points[:half+1])),
+                                     fill="#"+"101010".replace('10','FF', (scan_type-2)*2 + 1).replace("FF", "10", (scan_type-2) * 2), width=2,
+                                     tags=("plot"))
+            ResultCanvas.create_line(list(zip(x_points[half:], y_points[half:])),
+                                     fill="#"+"101010".replace('10','FF', 3 - (scan_type-2)*2).replace("FF", "10", 2 - (scan_type-2)*2), width=2,
+                                     tags=("plot"))
         
     
     pass
@@ -474,8 +583,32 @@ RedrawButton.grid(row=2,column=0,columnspan=2)
 # MERCURY FRAME
 # MERCURY FRAME END
 
-# SAVE DATA FRAME
-# SAVE DATA FRAME END
+# SAVE FRAME
+tkinter.Label(SaveFrame, text="Creator").grid(row=0,column=0)
+CreatorEntry = tkinter.Entry(SaveFrame, textvariable=CreatorEntryValue)
+CreatorEntry.grid(row=0,column=1)
+
+tkinter.Label(SaveFrame, text="Label").grid(row=1,column=0)
+LabelEntry = tkinter.Entry(SaveFrame, textvariable=LabelEntryValue)
+LabelEntry.grid(row=1,column=1)
+
+tkinter.Label(SaveFrame, text="Composition").grid(row=2,column=0)
+CompositionEntry = tkinter.Entry(SaveFrame, textvariable=CompositionEntryValue)
+CompositionEntry.grid(row=2,column=1)
+
+tkinter.Label(SaveFrame, text="Light Intensity").grid(row=3,column=0)
+LightEntry = tkinter.Entry(SaveFrame, textvariable=LightEntryValue)
+LightEntry.grid(row=3,column=1)
+
+tkinter.Label(SaveFrame, text="Pixel").grid(row=4,column=0)
+PixelEntry = tkinter.Entry(SaveFrame, textvariable=PixelEntryValue)
+PixelEntry.grid(row=4,column=1)
+
+SaveButton = tkinter.Button(SaveFrame, text="Save", command=FUNC_SAVE_BUTTON)
+SaveButton.grid(row=5,column=0,columnspan=2)
+
+tkinter.Checkbutton(SaveFrame, text="Auto Save", variable=AutoSaveVariable, onvalue=True, offvalue=False).grid(row=6, column=0,columnspan=2)
+# SAVE FRAME END
 
 # INI AREA
 FUNC_REFRESH_INST_BUTTON()
