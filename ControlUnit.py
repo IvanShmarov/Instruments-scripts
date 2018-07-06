@@ -14,6 +14,9 @@ KeithleyReadyStatus.set(False)
 MercuryReadyStatus = tkinter.BooleanVar()
 MercuryReadyStatus.set(False)
 
+LightSourceReadyStatus = tkinter.BooleanVar()
+LightSourceReadyStatus.set(False)
+
 StartVoltageEntryValue = tkinter.StringVar()
 StartVoltageEntryValue.set("0.0")
 
@@ -62,6 +65,15 @@ PixelEntryValue.set("")
 AutoSaveVariable = tkinter.BooleanVar()
 AutoSaveVariable.set(False)
 
+LightSourceEntryValue = tkinter.StringVar()
+LightSourceEntryValue.set("0.0")
+
+LightSourceScaleValue = tkinter.DoubleVar()
+LightSourceScaleValue.set(0.0)
+
+LightSourceOutput = tkinter.BooleanVar()
+LightSourceOutput.set(False)
+
 RAW_DATA = ""
 scan_time = None
 scan_type = -1
@@ -84,13 +96,49 @@ Keithley = None
 
 Mercury = None
 
+LightSource = None
+
 # INSTUMENTS END
 
 # FUNCTIONS
+def FUNC_LIGHT_SCALE_CHANGE(*args):
+    global LightSourceScaleValue
+    global LightSourceEntryValue
+    print("Light scale changed ", args)
+    if float(LightSourceEntryValue.get()) != LightSourceScaleValue.get():
+        LightSourceEntryValue.set(str(LightSourceScaleValue.get()))
+    FUNC_LIGHT_SOURCE_CURRENT_CHANGE()
+
+def FUNC_LIGHT_ENTRY_CHANGE(*args):
+    global LightSourceScaleValue
+    global LightSourceEntryValue
+    print("Light entry change ", args)
+    try:
+        value = float(LightSourceEntryValue.get())
+        if value != LightSourceScaleValue.get():
+            LightSourceScaleValue.set(value)
+    except:
+        pass
+
+def FUNC_LIGHT_SOURCE_CURRENT_CHANGE():
+    global LightSource
+    global LightSourceScaleValue
+    if LightSource:
+        LightSource.write("CURR " + str(LightSourceScaleValue.get()))
+
+def FUNC_LIGHT_SOURCE_OUTPUT_CHANGE(*args):
+    global LightSource
+    global LightSourceOutput
+    if LightSource:
+        if LightSourceOutput.get():
+            LightSource.write("OUTP ON")
+        else:
+            LightSource.write("OUTP OFF")
+
 def FUNC_SCAN_BUTTON(*args):
     global KeithleyReadyStatus
     global ScanningStatus
-    print("Scan Button Pressed" , args)
+    print("Scan Button Pressed " , args)
     if KeithleyReadyStatus.get():
         ScanningStatus.set(True)
         ScanningThread = threading.Thread(target=THREAD_SCAN)
@@ -134,6 +182,17 @@ def FUNC_MERCURY_STATUS_CHANGE(*args):
         MercuryStatusLabel["text"] = "Not Ready"
         MercuryStatusLabel["bg"] = "#ff0000"
 
+def FUNC_LIGHT_SOURCE_STATUS_CHANGE(*args):
+    global LightSourceReadyStatus
+    global LightSourceStatusLabel
+    if LightSourceReadyStatus.get():
+        LightSourceStatusLabel["text"] = "Ready"
+        LightSourceStatusLabel["bg"] = "#00ff00"
+    else:
+        LightSourceStatusLabel["text"] = "Not Ready"
+        LightSourceStatusLabel["bg"] = "#ff0000"
+        
+
 def FUNC_SCANNING_STATUS_CHANGE(*args):
     global ScanningStatus
     global ScanButton
@@ -155,8 +214,10 @@ def FUNC_SCANNING_STATUS_CHANGE(*args):
 def FUNC_REFRESH_INST_BUTTON(*args):
     FindKeithleyThread = threading.Thread(target=THREAD_FIND_KEITHLEY, name="FINDING KEITHLEY")
     FindMercuryThread = threading.Thread(target=THREAD_FIND_MERCURY, name="FINDING MERCURY")
+    FindLightSourceThread = threading.Thread(target=THREAD_FIND_LIGHT_SOURCE, name="FINDING LIGHT SOURCE")
     FindKeithleyThread.start()
     FindMercuryThread.start()
+    FindLightSourceThread.start()
     
 
 
@@ -272,6 +333,34 @@ def THREAD_FIND_MERCURY():
     else:
         print("Mercury was not found")
         MercuryReadyStatus.set(False)
+        
+def THREAD_FIND_LIGHT_SOURCE():
+    global LightSource
+    global LightSourceReadyStatus
+    global ResMan
+    LightSource = None
+    list_of_instruments = ResMan.list_resources()
+    
+    light_source_addr = ""
+
+    for item in list_of_instruments:
+        if ("::0x05E6::0x2200::" in item):
+            light_source_addr = item
+            break
+    if light_source_addr:
+        LightSource = ResMan.open_resource( light_source_addr )
+    if LightSource:
+        print("Found Light Source: ", LightSource.query("*IDN?"))
+        LightSource.timeout = 10000
+        LightSourceReadyStatus.set(True)
+        LightSource.write("OUTP OFF")
+        LightSource.write("VOLT 38.5")
+        LightSource.write("CURR 0.0")
+   
+    else:
+        print("Light Source was not found")
+        LightSourceReadyStatus.set(False)
+    pass
 
 def THREAD_SCAN():
     global Keithley
@@ -449,11 +538,15 @@ MercFrame["text"] = "Mercury Control"
 SaveFrame = tkinter.LabelFrame(root)
 SaveFrame["text"] = "Save data"
 
+LightSourceFrame = tkinter.LabelFrame(root)
+LightSourceFrame["text"] = "Light Source"
+
 StatusFrame.grid(row=0,column=0)
 ControlFrame.grid(row=1,column=0)
-ResultFrame.grid(row=0,column=1,rowspan=2)
+ResultFrame.grid(row=0,column=1, rowspan=3)
 MercFrame.grid(row=0,column=2)
 SaveFrame.grid(row=1,column=2)
+LightSourceFrame.grid(row=2, column=0)
 # FRAMES END
 
 # STATUS FRAME
@@ -468,9 +561,15 @@ MercuryStatusLabel = tkinter.Label(StatusFrame, text="Pending",
 MercuryStatusLabel.grid(row=1,column=1)
 MercuryReadyStatus.trace("w", FUNC_MERCURY_STATUS_CHANGE)
 
+tkinter.Label(StatusFrame, text="Light Source: ").grid(row=2,column=0)
+LightSourceStatusLabel = tkinter.Label(StatusFrame, text="Pending",
+                                       bg="#ff0000")
+LightSourceStatusLabel.grid(row=2, column=1)
+LightSourceReadyStatus.trace("w", FUNC_LIGHT_SOURCE_STATUS_CHANGE)
+
 RefreshInstrumentsButton = tkinter.Button(StatusFrame, text="Refresh Instruments",
                                           command=FUNC_REFRESH_INST_BUTTON)
-RefreshInstrumentsButton.grid(row=2,column=0,columnspan=2)
+RefreshInstrumentsButton.grid(row=3,column=0,columnspan=2)
 # STATUS FRAME END
 
 # CONTROL FRAME
@@ -609,6 +708,22 @@ SaveButton.grid(row=5,column=0,columnspan=2)
 
 tkinter.Checkbutton(SaveFrame, text="Auto Save", variable=AutoSaveVariable, onvalue=True, offvalue=False).grid(row=6, column=0,columnspan=2)
 # SAVE FRAME END
+
+# LIGHT SOURCE FRAME
+tkinter.Label(LightSourceFrame, text="Current").grid(row=0,column=0)
+LightSourceEntry = tkinter.Entry(LightSourceFrame, textvariable=LightSourceEntryValue)
+LightSourceEntry.grid(row=0, column=1)
+LightSourceEntryValue.trace("w", FUNC_LIGHT_ENTRY_CHANGE)
+
+LightSourceScale = tkinter.Scale(LightSourceFrame, variable = LightSourceScaleValue, from_=0.0, to=1.92, resolution=0.01, orient=tkinter.HORIZONTAL)
+LightSourceScale.grid(row=1,column=0,columnspan=2)
+LightSourceScaleValue.trace("w", FUNC_LIGHT_SCALE_CHANGE)
+
+LightSourceOutputCheckbutton = tkinter.Checkbutton(LightSourceFrame, variable=LightSourceOutput, text="Light Source")
+LightSourceOutputCheckbutton.grid(row=2,column=0,columnspan=2)
+LightSourceOutput.trace("w", FUNC_LIGHT_SOURCE_OUTPUT_CHANGE)
+
+# LIGHT SOURCE FRAME END
 
 # INI AREA
 FUNC_REFRESH_INST_BUTTON()
