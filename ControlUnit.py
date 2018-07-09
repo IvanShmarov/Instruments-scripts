@@ -735,7 +735,7 @@ LightSourceEntry = tkinter.Entry(LightSourceFrame, textvariable=LightSourceEntry
 LightSourceEntry.grid(row=0, column=1)
 LightSourceEntryValue.trace("w", FUNC_LIGHT_ENTRY_CHANGE)
 
-LightSourceScale = tkinter.Scale(LightSourceFrame, variable = LightSourceScaleValue, from_=0.0, to=1.92, resolution=0.01, orient=tkinter.HORIZONTAL)
+LightSourceScale = tkinter.Scale(LightSourceFrame, variable = LightSourceScaleValue, from_=0.0, to=1.4, resolution=0.01, orient=tkinter.HORIZONTAL)
 LightSourceScale.grid(row=1,column=0,columnspan=2)
 LightSourceScaleValue.trace("w", FUNC_LIGHT_SCALE_CHANGE)
 
