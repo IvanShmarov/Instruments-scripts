@@ -74,6 +74,9 @@ LightSourceScaleValue.set(0.0)
 LightSourceOutput = tkinter.BooleanVar()
 LightSourceOutput.set(False)
 
+TemperatureEntryValue = tkinter.StringVar()
+TemperatureEntryValue.set("290")
+
 RAW_DATA = ""
 scan_time = None
 scan_type = -1
@@ -211,6 +214,7 @@ def FUNC_SCANNING_STATUS_CHANGE(*args):
         ScanButton["bg"] = "#00ff00"
         SaveButton["state"] = tkinter.NORMAL
 
+
 def FUNC_REFRESH_INST_BUTTON(*args):
     FindKeithleyThread = threading.Thread(target=THREAD_FIND_KEITHLEY, name="FINDING KEITHLEY")
     FindMercuryThread = threading.Thread(target=THREAD_FIND_MERCURY, name="FINDING MERCURY")
@@ -267,6 +271,13 @@ def FUNC_SAVE_BUTTON():
 
     output_file.close()
     print("File saved: ", file_name)
+
+def FUNC_SET_TEMP_BUTTON(*args):
+    global Mercury
+    global TemperatureEntryValue
+    print("Set temperature button is pressed ", args)
+    if Mercury:
+        Mercury.query("SET:DEV:MB1.T1:TEMP:LOOP:TSET:" + TemperatureEntryValue.get())
     
     
     
@@ -330,6 +341,8 @@ def THREAD_FIND_MERCURY():
                 pass
     if Mercury:
         print("Found Mercury: ", Mercury.query("*IDN?"))
+        Mercury.query("SET:DEV:MB1.T1:TEMP:LOOP:PIDT:ON")
+        Mercury.query("SET:DEV:MB1.T1:TEMP:LOOP:ENAB:ON")
     else:
         print("Mercury was not found")
         MercuryReadyStatus.set(False)
@@ -532,8 +545,8 @@ ControlFrame["text"] = "Keithley Sweep Control"
 ResultFrame = tkinter.LabelFrame(root)
 ResultFrame["text"] = "Result"
 
-MercFrame = tkinter.LabelFrame(root)
-MercFrame["text"] = "Mercury Control"
+MercuryFrame = tkinter.LabelFrame(root)
+MercuryFrame["text"] = "Mercury Control"
 
 SaveFrame = tkinter.LabelFrame(root)
 SaveFrame["text"] = "Save data"
@@ -544,7 +557,7 @@ LightSourceFrame["text"] = "Light Source"
 StatusFrame.grid(row=0,column=0)
 ControlFrame.grid(row=1,column=0)
 ResultFrame.grid(row=0,column=1, rowspan=3)
-MercFrame.grid(row=0,column=2)
+MercuryFrame.grid(row=0,column=2)
 SaveFrame.grid(row=1,column=2)
 LightSourceFrame.grid(row=2, column=0)
 # FRAMES END
@@ -680,6 +693,13 @@ RedrawButton.grid(row=2,column=0,columnspan=2)
 # RESULT FRAME END
 
 # MERCURY FRAME
+tkinter.Label(MercuryFrame, text="Temperature").grid(row=0,column=0)
+TemperatureEntry = tkinter.Entry(MercuryFrame, textvariable=TemperatureEntryValue)
+TemperatureEntry.grid(row=0,column=1)
+
+SetTemperatureButton = tkinter.Button(MercuryFrame, text="Set", command=FUNC_SET_TEMP_BUTTON)
+SetTemperatureButton.grid(row=1,column=0, columnspan=2)
+
 # MERCURY FRAME END
 
 # SAVE FRAME
