@@ -77,6 +77,8 @@ LightSourceOutput.set(False)
 TemperatureEntryValue = tkinter.StringVar()
 TemperatureEntryValue.set("290")
 
+Sun_Current = 0.7
+
 RAW_DATA = ""
 scan_time = None
 scan_type = -1
@@ -530,10 +532,33 @@ def THREAD_DRAW_DATA():
 
 # THREADS END
 
-# THREADS INI
+# MACROS
 
+def MACROS_1(*args):
+    pass
+    
 
-# THREADS INI END
+def MACROS_2(*args):
+    if Mercury:
+        for temp in range(80,291,10):
+            TemperatureEntryValue.set(str(temp))
+            FUNC_SET_TEMP_BUTTON()
+            now_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
+            while abs(temp - now_temp) > 5:                
+                now_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
+                time.sleep(1)
+            LightSourceEntryValue.set(str(Sun_Current))
+            LightSourceOutput.set(True)
+            FUNC_SCAN_BUTTON()
+            FUNC_SAVE_BUTTON()
+        
+
+def MACROS_3(*args):
+    if Keithley:
+        Keithley.write("SOUR:VOLT 1.5")
+        Keithley.write("")
+
+# MACROS END
 
 # FRAMES
 StatusFrame = tkinter.LabelFrame(root)
@@ -554,12 +579,16 @@ SaveFrame["text"] = "Save data"
 LightSourceFrame = tkinter.LabelFrame(root)
 LightSourceFrame["text"] = "Light Source"
 
+MacrosFrame = tkinter.LabelFrame(root)
+MacrosFrame["text"] = "Macros"
+
 StatusFrame.grid(row=0,column=0)
 ControlFrame.grid(row=1,column=0)
 ResultFrame.grid(row=0,column=1, rowspan=3)
 MercuryFrame.grid(row=0,column=2)
 SaveFrame.grid(row=1,column=2)
 LightSourceFrame.grid(row=2, column=0)
+MacrosFrame.grid(row=2, column=2)
 # FRAMES END
 
 # STATUS FRAME
@@ -744,6 +773,18 @@ LightSourceOutputCheckbutton.grid(row=2,column=0,columnspan=2)
 LightSourceOutput.trace("w", FUNC_LIGHT_SOURCE_OUTPUT_CHANGE)
 
 # LIGHT SOURCE FRAME END
+
+# MACROS FRAME
+Macros1 = tkinter.Button(MacrosFrame, text="Macros 1", command=MACROS_1)
+Macros1.grid(row=0,column=0)
+
+Macros1 = tkinter.Button(MacrosFrame, text="Macros 2", command=MACROS_2)
+Macros1.grid(row=1,column=0)
+
+Macros1 = tkinter.Button(MacrosFrame, text="Macros 3", command=MACROS_3)
+Macros1.grid(row=2,column=0)
+
+# MACROS FRAME END
 
 # INI AREA
 FUNC_REFRESH_INST_BUTTON()

@@ -41,21 +41,17 @@ if K:
     K.write(":SYST:BEEP:IMM 250, 0.5") # Trying to beep to check that SCPI works
 
     K.write("""*RST;
-TRAC:MAKE \"MyBuffer\", 300;
-SOUR:FUNC VOLT;
-SOUR:VOLT:RANG 20;
-SOUR:VOLT:ILIM 0.02;
-SENS:FUNC "CURR";
-SENS:CURR:RANG 25e-3;
-SOUR:SWE:VOLT:LIN 0, -5, 101, 10e-3, 1, BEST, OFF, ON, "MyBuffer";
-INIT;
-*WAI;
+TRAC:MAKE "MyBuffer", 100
+SOUR:FUNC VOLT
+SOUR:VOLT 5
+SOUR:VOLT:ILIM 100e-3
+SENS:FUNC "CURR"
+SENS:COUN 100
+OUTP ON
+MEAS? "MyBuffer", SOUR, READ, REL
+*WAI
+TRAC:DATA? 1, 100, "MyBuffer", SOUR, READ, REL
 """)
-    data_len = K.query("TRAC:ACT? \"MyBuffer\";")[:-1]
-    data = K.query("TRAC:DATA? 1, " + data_len + ", \"MyBuffer\", SOUR, READ, REL;")
-    real_data = [float(item) for item in data.split(",")]
-    V = real_data[0::3]
-    I = real_data[1::3]
-    t = real_data[2::3]
-    for item in zip(V,I,t):
-        print(item)
+    last = K.read()
+    data = K.read()
+    
