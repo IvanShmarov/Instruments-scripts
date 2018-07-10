@@ -83,9 +83,13 @@ Macros3VoltageEntryValue.set("1.5")
 Macros3DurationEntryValue = tkinter.StringVar()
 Macros3DurationEntryValue.set("10")
 
+Macros1VoltageEntryValue = tkinter.StringVar()
+Macros1VoltageEntryValue.set("1.5")
+
 Sun_Current = 0.7
 
 MacrosFlag = 0
+Macros1Status = False
 
 RAW_DATA = ""
 scan_time = None
@@ -93,6 +97,7 @@ scan_type = -1
 Voltage = []
 Current = []
 delta_time = []
+Temperature = []
 minVoltage = 0.0
 maxVoltage = 0.0
 CurrentLimmit = 0.0
@@ -553,12 +558,67 @@ def THREAD_DRAW_DATA():
     
     pass
 
+
+def THREAD_MACROS_1():
+    global scan_time
+    global scan_type
+    global ScanningStatus
+    global Keithley
+    global Mercury
+    scan_type = 4
+    global Voltage
+    global Current
+    global Temperature
+    global delta_time
+    global AppliedVoltage
+    AppliedVoltage = float(Macros1VoltageEntryValue.get())    
+    
+    
+
+    if Keithley and Mercury:
+        TemperatureEntryValue.set("77")
+        FUNC_SET_TEMP_BUTTON()
+        ScanningStatus.set(True)
+        Keithley.write("""
+TRAC:CLE
+SOUR:FUNC:VOLT
+""")
+        Keithley.write("SOUR:VOLT " + Macros1VoltageEntryValue.get()+"\n")
+        Keithley.write("""
+SOUR:VOLT:RANGE 5
+SOUR:VOLT:ILIM 25e-3
+SENS:FUNC "CURR"
+SENS:COUN 1
+OUTP:STAT ON
+""")
+    while Macros1Status:
+        data = Keithley.query("MEAS:CURR? \"defbuffer1\", SOUR, READ, REL").split(",")
+        Voltage.append(float(data[0]))
+        Current.append(float(data[1]))
+        delta_time.append(float(data[2]))
+        # GETTING TEMPERATURE HERE
+        time.sleep(0.05)
+    scan_time=time.gmtime()
+    ScanningStatus.set(False)
+    
+
+    pass
+
 # THREADS END
 
 # MACROS
 
 def MACROS_1(*args):
+    global MacrosFlag
     MacrosFlag = 1
+    global Macros1Status
+    global Macros1Thread
+    if not Macros1Status:
+        Macros1Status = True
+        Macros1Thread = threading.Thread(target=THREAD_MACROS_1, name="MACROS_1")
+        Macros1Thread.start()
+    else:
+        Macros1Status = False
     pass
     
 
@@ -856,8 +916,11 @@ LightSourceOutput.trace("w", FUNC_LIGHT_SOURCE_OUTPUT_CHANGE)
 # MACROS FRAME
 Macros1Frame = tkinter.LabelFrame(MacrosFrame, text="Macros 1")
 Macros1Frame.grid(row=0,column=0)
-Macros1 = tkinter.Button(Macros1Frame, text="Macros 1", command=MACROS_1)
-Macros1.grid(row=0,column=0)
+tkinter.Label(Macros1Frame, text="V0=").grid(row=0,column=0)
+Macros1VoltageEntry = tkinter.Entry(Macros1Frame, textvariable=Macros1VoltageEntryValue)
+Macros1VoltageEntry.grid(row=0,column=1)
+Macros1 = tkinter.Button(Macros1Frame, text="Start", command=MACROS_1)
+Macros1.grid(row=1,column=0,columnspan=2)
 
 Macros2Frame = tkinter.LabelFrame(MacrosFrame, text="Macros 2")
 Macros2Frame.grid(row=1,column=0)
@@ -872,7 +935,7 @@ Macros3VoltageEntry.grid(row=0,column=1)
 tkinter.Label(Macros3Frame, text="t=").grid(row=1,column=0)
 Macros3DurationEntry = tkinter.Entry(Macros3Frame, textvariable=Macros3DurationEntryValue)
 Macros3DurationEntry.grid(row=1,column=1)
-Macros3 = tkinter.Button(Macros3Frame, text="Macros 3", command=MACROS_3)
+Macros3 = tkinter.Button(Macros3Frame, text="Start", command=MACROS_3)
 Macros3.grid(row=2,column=0, columnspan=2)
 
 
