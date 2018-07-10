@@ -41,17 +41,17 @@ if K:
     K.write(":SYST:BEEP:IMM 250, 0.5") # Trying to beep to check that SCPI works
 
     K.write("""*RST;
-TRAC:MAKE "MyBuffer", 100
+TRAC:MAKE "MyBuffer", 10000
 SOUR:FUNC VOLT
 SOUR:VOLT 5
+SOUR:VOLT:RANGE 20
 SOUR:VOLT:ILIM 100e-3
 SENS:FUNC "CURR"
-SENS:COUN 100
-OUTP ON
-MEAS? "MyBuffer", SOUR, READ, REL
+SENS:CURR:RANGE 10-3
+TRIG:LOAD:LOOP:DUR 10, 0.01, "MyBuffer"
+INIT
 *WAI
 TRAC:DATA? 1, 100, "MyBuffer", SOUR, READ, REL
 """)
-    last = K.read()
     data = K.read()
     
