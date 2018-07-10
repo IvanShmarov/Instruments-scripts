@@ -77,7 +77,15 @@ LightSourceOutput.set(False)
 TemperatureEntryValue = tkinter.StringVar()
 TemperatureEntryValue.set("290")
 
+Macros3VoltageEntryValue = tkinter.StringVar()
+Macros3VoltageEntryValue.set("1.5")
+
+Macros3DurationEntryValue = tkinter.StringVar()
+Macros3DurationEntryValue.set("10")
+
 Sun_Current = 0.7
+
+MacrosFlag = 0
 
 RAW_DATA = ""
 scan_time = None
@@ -89,6 +97,8 @@ minVoltage = 0.0
 maxVoltage = 0.0
 CurrentLimmit = 0.0
 TimeIncrement = 0.0
+AppliedVoltage = 0.0
+AppliedTime = 0.0
 
 
 # IMPORTANT VARIABLES END
@@ -245,18 +255,11 @@ def FUNC_SAVE_BUTTON():
     global maxVOltage
     global CurrentLimit
     global TimeIncrement
+    global AppliedVoltage
+    global AppliedTime
     print("Saving into file")
     file_name = LabelEntryValue.get() + "_" + str(scan_time.tm_yday) + "_" + str(scan_time.tm_year) + "_" + "%02d" % scan_time.tm_hour + "%02d" % scan_time.tm_min + "%02d" % scan_time.tm_sec + ".txt"
     output_file = open(file_name, "w")
-    output_file.write("Min Voltage: " + minVoltage + ";\n")
-    output_file.write("Max Voltage: " + maxVoltage + ";\n")
-    output_file.write("Current Limit: " + CurrentLimit + ";\n")
-    output_file.write("Time Increment: " + TimeIncrement + ";\n")
-    output_file.write("Creator: " + CreatorEntryValue.get() + ";\n")
-    output_file.write("Label: " + LabelEntryValue.get() + ";\n")
-    output_file.write("Composition: " + CompositionEntryValue.get() + ";\n")
-    output_file.write("Date: " + time.asctime(scan_time) + ";\n")
-    output_file.write("Light Intensity: " + LightEntryValue.get() + ";\n")
     output_file.write("Scan type: ")
     if scan_type == 0:
         output_file.write("FORWARD;\n")
@@ -266,6 +269,23 @@ def FUNC_SAVE_BUTTON():
         output_file.write("FORWARD->BACKWARD;\n")
     elif scan_type == 3:
         output_file.write("BACKWARD->FORWARD;\n")
+    elif scan_type == 5:
+        output_file.write("APPLIED VOLTAGE;\n")
+    if scan_type < 4: 
+        output_file.write("Min Voltage: " + str(minVoltage) + ";\n")
+        output_file.write("Max Voltage: " + str(maxVoltage) + ";\n")
+        output_file.write("Current Limit: " + str(CurrentLimit) + ";\n")
+        output_file.write("Time Increment: " + str(TimeIncrement) + ";\n")
+    elif scan_type == 5:
+        output_file.write("Applied Voltage: " + str(AppliedVoltage) + ";\n")
+        output_file.write("Applied Duration: " + str(AppliedTime) + ";\n")
+    output_file.write("Creator: " + CreatorEntryValue.get() + ";\n")
+    output_file.write("Label: " + LabelEntryValue.get() + ";\n")
+    output_file.write("Composition: " + CompositionEntryValue.get() + ";\n")
+    output_file.write("Date: " + time.asctime(scan_time) + ";\n")
+    output_file.write("Light Intensity: " + LightEntryValue.get() + ";\n")
+    
+    
     output_file.write("Pixel: " + PixelEntryValue.get() + ";\n")
     output_file.write("Voltage/ V, Current/ A, Time/ s;\n")
     for point in zip(Voltage, Current, delta_time):
@@ -394,6 +414,8 @@ def THREAD_SCAN():
     global maxVoltage
     global CurrentLimit
     global TimeIncrement
+    global MacrosFlag
+    MacrosFlag = 0
     minVoltage = str(min( float(StartVoltageEntryValue.get()), float(EndVoltageEntryValue.get()) ))
     maxVoltage = str(max( float(StartVoltageEntryValue.get()), float(EndVoltageEntryValue.get()) ))
     CurrentLimit = CurrentLimitValue.get()
@@ -442,13 +464,14 @@ def THREAD_DATA_PROCESSING():
     global Current
     global delta_time
     global AutoSaveVariable
-    print("Processing Results")
-    if RAW_DATA:
-        # EXTRACTING DATA
-        Voltage = [float(item) for item in RAW_DATA.split(",")[0::3]]
-        Current = [float(item) for item in RAW_DATA.split(",")[1::3]]
-        delta_time = [float(item) for item in RAW_DATA.split(",")[2::3]]
-        print("Results are processed")
+    if MacrosFlag == 0:
+        print("Processing Results")
+        if RAW_DATA:
+            # EXTRACTING DATA
+            Voltage = [float(item) for item in RAW_DATA.split(",")[0::3]]
+            Current = [float(item) for item in RAW_DATA.split(",")[1::3]]
+            delta_time = [float(item) for item in RAW_DATA.split(",")[2::3]]
+            print("Results are processed")
     if AutoSaveVariable.get():
         FUNC_SAVE_BUTTON()
     FUNC_REDRAW_BUTTON()
@@ -535,10 +558,12 @@ def THREAD_DRAW_DATA():
 # MACROS
 
 def MACROS_1(*args):
+    MacrosFlag = 1
     pass
     
 
 def MACROS_2(*args):
+    MacrosFlag = 2
     if Mercury:
         for temp in range(80,291,10):
             TemperatureEntryValue.set(str(temp))
@@ -554,9 +579,63 @@ def MACROS_2(*args):
         
 
 def MACROS_3(*args):
+    global Macros3VoltageEntryValue
+    global Macros3DurationEntryValue
+    global AppliedVoltage
+    global AppliedTime
+    global Voltage
+    global Current
+    global delta_time
+    global scan_time
+    global scan_type
+    MacrosFlag = 3
+    scan_type = 5
+    AppliedVoltage = float(Macros3VoltageEntryValue.get())
+    AppliedTime = float(Macros3DurationEntryValue.get())
     if Keithley:
-        Keithley.write("SOUR:VOLT 1.5")
-        Keithley.write("")
+        ScanningStatus.set(True)
+        Keithley.write("""
+*RST
+TRAC:CLE
+SOUR:FUNC VOLT
+SOUR:VOLT:ILIM 25e-3
+SENS:FUNC "CURR"
+""")
+        Keithley.write("SOUR:VOLT " + Macros3VoltageEntryValue.get()+"\n")
+        Keithley.write("TRIG:LOAD:LOOP:DUR " + Macros3DurationEntryValue.get()+"\n")
+        Keithley.write("""
+INIT
+*WAI
+SOUR:VOLT 0
+""")
+        Keithley.write("TRIG:LOAD:LOOP:DUR " + Macros3DurationEntryValue.get()+", 0, \"defbuffer2\"")
+        Keithley.write("""
+INIT
+*WAI
+""")
+        N_ON = Keithley.query("TRAC:ACT?")[:-1]
+        N_ON = Keithley.query("TRAC:ACT?")[:-1]
+        data_ON = Keithley.query("TRAC:DATA? 1, " + N_ON + ", \"defbuffer1\", SOUR, READ, REL")
+        N_OFF = Keithley.query("TRAC:ACT? \"defbuffer2\"")[:-1]
+        data_OFF = Keithley.query("TRAC:DATA? 1, " + N_OFF + ", \"defbuffer2\", SOUR, READ, REL")
+        if data_ON:
+            data_ON = data_ON.split(",")
+            V_ON = [float(item) for item in data_ON[0::3]]
+            I_ON = [float(item) for item in data_ON[1::3]]
+            t_ON = [float(item) for item in data_ON[2::3]]
+        if data_OFF:
+            data_OFF = data_OFF.split(",")
+            V_OFF = [float(item) for item in data_OFF[0::3]]
+            I_OFF = [float(item) for item in data_OFF[1::3]]
+            t_OFF = [float(item) for item in data_OFF[2::3]]
+        if data_ON and data_OFF:
+            Voltage = V_ON + V_OFF
+            Current = I_ON + I_OFF
+            delta_time = t_ON + [item + t_ON[-1] + 0.01 for item in t_OFF]
+        scan_time = time.gmtime()
+        ScanningStatus.set(False)
+
+        
 
 # MACROS END
 
@@ -775,14 +854,28 @@ LightSourceOutput.trace("w", FUNC_LIGHT_SOURCE_OUTPUT_CHANGE)
 # LIGHT SOURCE FRAME END
 
 # MACROS FRAME
-Macros1 = tkinter.Button(MacrosFrame, text="Macros 1", command=MACROS_1)
+Macros1Frame = tkinter.LabelFrame(MacrosFrame, text="Macros 1")
+Macros1Frame.grid(row=0,column=0)
+Macros1 = tkinter.Button(Macros1Frame, text="Macros 1", command=MACROS_1)
 Macros1.grid(row=0,column=0)
 
-Macros1 = tkinter.Button(MacrosFrame, text="Macros 2", command=MACROS_2)
-Macros1.grid(row=1,column=0)
+Macros2Frame = tkinter.LabelFrame(MacrosFrame, text="Macros 2")
+Macros2Frame.grid(row=1,column=0)
+Macros2 = tkinter.Button(Macros2Frame, text="Start", command=MACROS_2)
+Macros2.grid(row=0,column=0)
 
-Macros1 = tkinter.Button(MacrosFrame, text="Macros 3", command=MACROS_3)
-Macros1.grid(row=2,column=0)
+Macros3Frame = tkinter.LabelFrame(MacrosFrame, text="Macros 3")
+Macros3Frame.grid(row=2,column=0)
+tkinter.Label(Macros3Frame, text="V0=").grid(row=0,column=0)
+Macros3VoltageEntry = tkinter.Entry(Macros3Frame, textvariable=Macros3VoltageEntryValue)
+Macros3VoltageEntry.grid(row=0,column=1)
+tkinter.Label(Macros3Frame, text="t=").grid(row=1,column=0)
+Macros3DurationEntry = tkinter.Entry(Macros3Frame, textvariable=Macros3DurationEntryValue)
+Macros3DurationEntry.grid(row=1,column=1)
+Macros3 = tkinter.Button(Macros3Frame, text="Macros 3", command=MACROS_3)
+Macros3.grid(row=2,column=0, columnspan=2)
+
+
 
 # MACROS FRAME END
 
