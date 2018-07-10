@@ -48,27 +48,10 @@ SOUR:VOLT 5
 SOUR:VOLT:RANGE 20
 SOUR:VOLT:ILIM 100e-3
 SENS:FUNC "CURR"
-TRIG:LOAD:LOOP:DUR 10
-INIT
-*WAI
-SOUR:VOLT -5
-TRIG:LOAD:LOOP:DUR 10, 0, "defbuffer2"
-INIT
-*WAI
+SENS:COUN 1
+OUTP:STAT ON
 """)
-    N_ON = K.query("TRAC:ACT?")[:-1]
-    data_ON = K.query("TRAC:DATA? 1, " + N_ON + ", \"defbuffer1\", SOUR, READ, REL")
-    N_OFF = K.query("TRAC:ACT? \"defbuffer2\"")[:-1]
-    data_OFF = K.query("TRAC:DATA? 1, " + N_OFF + ", \"defbuffer2\", SOUR, READ, REL")
-    if data_ON:
-        data_ON = data_ON.split(",")
-        V_ON = [float(item) for item in data_ON[0::3]]
-        I_ON = [float(item) for item in data_ON[1::3]]
-        t_ON = [float(item) for item in data_ON[2::3]]
-
-    if data_OFF:
-        data_OFF = data_OFF.split(",")
-        V_OFF = [float(item) for item in data_OFF[0::3]]
-        I_OFF = [float(item) for item in data_OFF[1::3]]
-        t_OFF = [float(item) for item in data_OFF[2::3]]
+    while True:
+        print( K.query("MEAS:CURR? \"defbuffer1\", SOUR, READ, REL")[:-1] )
+        time.sleep(0.1)
     
