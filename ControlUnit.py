@@ -596,7 +596,7 @@ OUTP:STAT ON
         Voltage.append(float(data[0]))
         Current.append(float(data[1]))
         delta_time.append(float(data[2]))
-        # GETTING TEMPERATURE HERE
+        Temperature.append(float(Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2]))
         time.sleep(0.05)
     scan_time=time.gmtime()
     ScanningStatus.set(False)
