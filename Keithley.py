@@ -1,4 +1,5 @@
 import visa # Importing Virtual Instrument Module
+import time
 
 
 ResM = visa.ResourceManager() # Create a resource manager
@@ -41,17 +42,33 @@ if K:
     K.write(":SYST:BEEP:IMM 250, 0.5") # Trying to beep to check that SCPI works
 
     K.write("""*RST;
-TRAC:MAKE "MyBuffer", 10000
+TRAC:CLE
 SOUR:FUNC VOLT
 SOUR:VOLT 5
 SOUR:VOLT:RANGE 20
 SOUR:VOLT:ILIM 100e-3
 SENS:FUNC "CURR"
-SENS:CURR:RANGE 10-3
-TRIG:LOAD:LOOP:DUR 10, 0.01, "MyBuffer"
+TRIG:LOAD:LOOP:DUR 10
 INIT
 *WAI
-TRAC:DATA? 1, 100, "MyBuffer", SOUR, READ, REL
+SOUR:VOLT -5
+TRIG:LOAD:LOOP:DUR 10, 0, "defbuffer2"
+INIT
+*WAI
 """)
-    data = K.read()
+    N_ON = K.query("TRAC:ACT?")[:-1]
+    data_ON = K.query("TRAC:DATA? 1, " + N_ON + ", \"defbuffer1\", SOUR, READ, REL")
+    N_OFF = K.query("TRAC:ACT? \"defbuffer2\"")[:-1]
+    data_OFF = K.query("TRAC:DATA? 1, " + N_OFF + ", \"defbuffer2\", SOUR, READ, REL")
+    if data_ON:
+        data_ON = data_ON.split(",")
+        V_ON = [float(item) for item in data_ON[0::3]]
+        I_ON = [float(item) for item in data_ON[1::3]]
+        t_ON = [float(item) for item in data_ON[2::3]]
+
+    if data_OFF:
+        data_OFF = data_OFF.split(",")
+        V_OFF = [float(item) for item in data_OFF[0::3]]
+        I_OFF = [float(item) for item in data_OFF[1::3]]
+        t_OFF = [float(item) for item in data_OFF[2::3]]
     
