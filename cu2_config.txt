@@ -1,0 +1,39 @@
+{
+    "ResistoMeter": {
+        "INI": "\nCONF:FRES %f\n",
+	"PAR": [1e3]
+    },
+    "SourceMeter": {
+        "INI": "\nSOUR:FUNC VOLT\nSOUR:VOLT:RANG %f\nSOUR:VOLT:ILIM %f\nSENS:FUNC \"CURR\"\nSENS:CURR:RANG %f\n",
+	"PAR": [2, 5e-3, 10e-3]
+    },
+    "Mercury": {
+        "INI": "\nSET:DEV:MB1.T1:TEMP:LOOP:PIDT:ON\nSET:DEV:MB1.T1:TEMP:LOOP:ENAB:ON\nSET:DEV:MB1.T1:TEMP:LOOP:TSET %f\n",
+        "PAR": [273.15]
+    },
+    "LightSource": {
+        "INI": "\nOUTP OFF\nVOLT 38.5\nCURR 0.0\nOUTP ON\n",
+        "PAR": [],
+        "Sun_Current": 0.7
+    },
+    "Func 1": {
+        "V0": 0.7,
+        "Light": 0
+    },
+    "Func 2": {
+        "Temp Start": 80,
+        "Temp End": 290,
+        "Temp Step": 5,
+        "Light Ints": [0, 0.01, 0.1, 0.5, 1]
+    },
+    "Func 3": {
+        "V0": 0.7,
+        "Time": 10
+    },
+    "Save Header": {
+        "Creator": "Test Creator",
+        "Label": "Test Label",
+        "Composition": "Some stuff",
+        "Pixel": 1
+    }
+}
