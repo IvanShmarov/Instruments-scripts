@@ -24,7 +24,12 @@
         "Temp Start": 80,
         "Temp End": 290,
         "Temp Step": 5,
-        "Light Ints": [0, 0.01, 0.1, 0.5, 1]
+        "Light Ints": [0, 0.01, 0.1, 0.5, 1],
+        "V0": 0,
+        "V1": 1.5,
+        "Num": 101,
+        "delay": 0.01,
+        "Both_ways": false
     },
     "Func 3": {
         "V0": 0.7,
