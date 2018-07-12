@@ -363,7 +363,9 @@ if SourceMeter and ResistoMeter and LightSource and Mercury:
         elif item == "LightSource":
             LightSource.write( config[item]["INI"] % tuple( config[item]["PAR"]  ) )
         elif item == "Mercury":
-            Mercury.write( config[item]["INI"] % tuple( config[item]["PAR"]  ) )
+            print(Mercury.query( config[item]["INI"] % tuple( config[item]["PAR"]  ) ))
+            print(Mercury.read())
+            print(Mercury.read())
 
 
     print("Everything seems good")
