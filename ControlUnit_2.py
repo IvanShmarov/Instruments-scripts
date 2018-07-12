@@ -2,6 +2,7 @@ kek = "kek is always defined, kek"
 import visa
 import time
 import json
+import matplotlib.pyplot as plt
 from threading import Thread
 
 # INI
@@ -65,7 +66,8 @@ OUTP:STAT ON
         print("Func 1 points measured: ", data["Count"])
         
         chamber_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
-        time.sleep(0.05)
+        print("The temperature is: ", chamber_temp)
+        time.sleep(0.1)
         
     scan_time = time.gmtime()
     # Switch stuff off
@@ -90,6 +92,16 @@ OUTP:STAT OFF
     save_file = open(file_name, "w")
     save_file.write(json.dumps(record))
     save_file.close()
+
+    plt.close("all")
+    temp_plot = plot.figure("FUNC 1, Voltage:%f, Light:%f" % (V0, Light))
+    plt.subplot(221)
+    plt.plot(data["Time"], record["Thermistor"])
+    plt.subplot(222)
+    plt.plot(data["Time"], data["Current"])
+    plt.subplot(223)
+    plt.plot(data["Thermistor"], data["Current"])
+    temp_plot.show()
 
     
     # Call next function
@@ -176,6 +188,16 @@ OUTP:STAT OFF
             save_file = open(file_name, "w")
             save_file.write(json.dumps(record))
             save_file.close()
+
+            plt.close("all")
+            temp_plot_1 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V0, V1, intens))
+            plt.subplot(221)
+            plt.plot(data["Time"], data["Thermistor"])
+            plt.subplot(222)
+            plt.plot(data["Time"], data["Voltage"])
+            plt.subplot(223)
+            plt.plot(data["Voltage"], data["Current"])
+            temp_plot_1.show()
             
             if both_ways:
                 raw_data_2 = raw_data_2.split(",")
@@ -198,6 +220,15 @@ OUTP:STAT OFF
                 save_file = open(file_name, "w")
                 save_file.write(json.dumps(record))
                 save_file.close()
+
+                temp_plot_2 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V1, V0, intens))
+                plt.subplot(221)
+                plt.plot(data["Time"], data["Thermistor"])
+                plt.subplot(222)
+                plt.plot(data["Time"], data["Voltage"])
+                plt.subplot(223)
+                plt.plot(data["Voltage"], data["Current"])
+                temp_plot_2.show()
 
             
     # Switch stuff off
@@ -277,6 +308,16 @@ OUTP:STAT ON
         save_file = open(file_name, "w")
         save_file.write(json.dumps(record))
         save_file.close()
+
+        plt.close("all")
+        temp_plot = plt.figure("FUNC 3, Volt: %f, Duration: %f, Light: %f" % (V0, duration, intens))
+        plt.subplot(221)
+        plt.plot(data["Time"], data["Thermistor"])
+        plt.subplot(222)
+        plt.plot(data["Time"], data["Voltage"])
+        plt.subplot(223)
+        plt.plot(data["Time"], data["Current"])
+        temp_plot.show()
 
     
     
