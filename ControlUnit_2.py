@@ -94,9 +94,9 @@ OUTP:STAT OFF
     save_file.close()
 
     plt.close("all")
-    temp_plot = plot.figure("FUNC 1, Voltage:%f, Light:%f" % (V0, Light))
+    temp_plot = plt.figure("FUNC 1, Voltage:%f, Light:%f" % (V0, Light))
     plt.subplot(221)
-    plt.plot(data["Time"], record["Thermistor"])
+    plt.plot(data["Time"], data["Thermistor"])
     plt.subplot(222)
     plt.plot(data["Time"], data["Current"])
     plt.subplot(223)
@@ -192,7 +192,7 @@ OUTP:STAT OFF
             plt.close("all")
             temp_plot_1 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V0, V1, intens))
             plt.subplot(221)
-            plt.plot(data["Time"], data["Thermistor"])
+            plt.plot(data["Time"], data["Current"])
             plt.subplot(222)
             plt.plot(data["Time"], data["Voltage"])
             plt.subplot(223)
@@ -230,13 +230,13 @@ OUTP:STAT OFF
                 plt.plot(data["Voltage"], data["Current"])
                 temp_plot_2.show()
 
-            
+        LightSource.write("CURR 0")
     # Switch stuff off
     SourceMeter.write("""
 SOUR:VOLT 0
 OUTP:STAT OFF
 """)
-    LightSource.write("CURR 0")
+    
     # Call next function
     print("Func caller")
     thread_caller(seq)
@@ -245,15 +245,17 @@ OUTP:STAT OFF
 def Func_3(seq):
     print("\nStarting function 3")
 
-    data = {"Count": 0,"Voltage":[], "Current":[], "Time":[], "Thermistor":{}}
+    
 
     V0 = config["Func 3"]["V0"]
-    duration = config["Func 3"]["V0"]
+    duration = config["Func 3"]["Time"]
     light_ints = [0, config["LightSource"]["Sun_Current"]]
 
     for intens in light_ints:
+        data = {"Count": 0,"Voltage":[], "Current":[], "Time":[], "Thermistor":[]}
         LightSource.write("CURR %f" % intens)
         SourceMeter.write("""
+TRAC:CLE "defbuffer1"
 SOUR:VOLT %f
 OUTP:STAT ON
 """ % V0)
@@ -271,8 +273,8 @@ OUTP:STAT ON
             data["Time"].append(float( source_reading[2] ))
             data["Thermistor"].append(float( therm_reading ))
             data["Count"] += 1
-            print("Func 3 points measured: ", data["Count"])
-            time.sleep(0.05)
+            print("Func 3 points measured: ", data["Count"], " ", time.time() - start_time)
+            time.sleep(0.01)
 
         SourceMeter.write("""
 SOUR:VOLT 0
@@ -290,8 +292,8 @@ OUTP:STAT ON
             data["Time"].append(float( source_reading[2] ))
             data["Thermistor"].append(float( therm_reading ))
             data["Count"] += 1
-            print("Func 3 points measured: ", data["Count"])
-            time.sleep(0.05)
+            print("Func 3 points measured: ", data["Count"], " ", time.time() - start_time)
+            time.sleep(0.01)
 
         scan_time = time.gmtime()
         # Save data
