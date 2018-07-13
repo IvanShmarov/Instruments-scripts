@@ -33,6 +33,11 @@ def thread_caller(seq):
         the_thread.start()
     else:
         print("Done")
+        SourceMeter.write("""
+OUTP:STATE OFF
+""")
+        LightSource.write("OUTP OFF")
+        
 
 def Func_1(seq):
     print("\nStarting function 1")
@@ -50,7 +55,7 @@ SOUR:VOLT %f
 OUTP:STAT ON
 """ % V0) # Source produces V0 volts and otuput is on
     LightSource.write("CURR %f" % Light ) # Light source is 0 or 1 sun
-    print(Mercury.query("SET:DEV:MB1.T1:TEMP:LOOP:TSET:77")) # Set target temp to 77K
+    print(Mercury.query("SET:DEV:MB1.T1:TEMP:LOOP:TSET:10")) # Set target temp to 77K
     chamber_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
 
     # Do many measurements
@@ -101,6 +106,7 @@ OUTP:STAT OFF
     plt.plot(data["Time"], data["Current"])
     plt.subplot(223)
     plt.plot(data["Thermistor"], data["Current"])
+    plt.pause(0.05)
     temp_plot.show()
 
     
@@ -197,6 +203,7 @@ OUTP:STAT OFF
             plt.plot(data["Time"], data["Voltage"])
             plt.subplot(223)
             plt.plot(data["Voltage"], data["Current"])
+            plt.pause(0.05)
             temp_plot_1.show()
             
             if both_ways:
@@ -228,6 +235,7 @@ OUTP:STAT OFF
                 plt.plot(data["Time"], data["Voltage"])
                 plt.subplot(223)
                 plt.plot(data["Voltage"], data["Current"])
+                plt.pause(0.05)
                 temp_plot_2.show()
 
         LightSource.write("CURR 0")
@@ -319,9 +327,12 @@ OUTP:STAT ON
         plt.plot(data["Time"], data["Voltage"])
         plt.subplot(223)
         plt.plot(data["Time"], data["Current"])
+        plt.pause(0.05)
         temp_plot.show()
 
-    
+    SourceMeter.write("OUTP:STAT OFF")
+
+    LightSource.write("CURR 0")    
     
     # Call next function
     print("Func caller")
