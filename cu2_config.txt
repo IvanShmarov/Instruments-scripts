@@ -1,18 +1,18 @@
 {
     "ResistoMeter": {
-        "INI": "\nCONF:FRES %f\n",
+        "INI": "CONF:FRES %f\n",
 	"PAR": [1e3]
     },
     "SourceMeter": {
-        "INI": "\nSOUR:FUNC VOLT\nSOUR:VOLT:RANG %f\nSOUR:VOLT:ILIM %f\nSENS:FUNC \"CURR\"\nSENS:CURR:RANG %f",
+        "INI": "SOUR:FUNC VOLT\nSOUR:VOLT:RANG %f\nSOUR:VOLT:ILIM %f\nSENS:FUNC \"CURR\"\nSENS:CURR:RANG %f",
 	"PAR": [2, 5e-3, 10e-3]
     },
     "Mercury": {
-        "INI": "\nSET:DEV:MB1.T1:TEMP:LOOP:PIDT:ON\nSET:DEV:MB1.T1:TEMP:LOOP:ENAB:ON\nSET:DEV:MB1.T1:TEMP:LOOP:TSET:%f",
+        "INI": "SET:DEV:MB1.T1:TEMP:LOOP:PIDT:ON\nSET:DEV:MB1.T1:TEMP:LOOP:ENAB:ON\nSET:DEV:MB1.T1:TEMP:LOOP:TSET:%f",
         "PAR": [273.15]
     },
     "LightSource": {
-        "INI": "\nOUTP OFF\nVOLT 38.5\nCURR 0.0\nOUTP ON",
+        "INI": "OUTP OFF\nVOLT 38.5\nCURR 0.0\nOUTP ON",
         "PAR": [],
         "Sun_Current": 0.7
     },
