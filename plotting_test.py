@@ -1,15 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time
+import json
 
-for i in range(3):
-    plt.close("all")
-    temp = plt.figure()
-    plt.subplot(221)
-    plt.plot(np.random.random(100))
-    plt.subplot(222)
-    plt.plot(np.random.random(100))
-    plt.subplot(223)
-    plt.plot(np.random.random(100))
-    plt.pause(0.05)
-    temp.show()
+input_file = open("Temp_calibration.txt", "r")
+data = json.loads(input_file.read())
+input_file.close()
+
+plt.figure()
+plt.plot(data["temp"], data["curr"])
+plt.xlabel("Temperature/ K")
+plt.ylabel("Diode Current/ A")
+plt.title("Current/ Temperature relation of photodiode")
+plt.show()
