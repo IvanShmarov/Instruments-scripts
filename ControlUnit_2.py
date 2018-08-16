@@ -357,7 +357,7 @@ for item in list_of_instruments:
     elif "::0x05E6::0x2200::" in item:
         LightSource = rm.open_resource(item)
         print("LightSource:\t", LightSource.query("*IDN?"))
-    elif "ASRL11" in item:
+    elif "ASRL4" in item:
         Mercury = rm.open_resource(item)
         print("Mercury:\t", Mercury.query("*IDN?"))
 
