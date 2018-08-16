@@ -76,7 +76,7 @@ OUTP:STAT ON
         print("The temperature is: ", chamber_temp)
         time.sleep(0.1)
         
-    scan_time = time.gmtime()
+    scan_time = time.localtime()
     # Switch stuff off
     SourceMeter.write("""
 SOUR:VOLT 0
@@ -95,17 +95,21 @@ OUTP:STAT OFF
     record["Light current"] = Light
     record["data"] = dict()
     record["data"].update( data )
-    file_name = config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.gmtime()) + ".txt"
+    file_name = "F1_"+config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.localtime()) + ".txt"
     save_file = open(file_name, "w")
-    save_file.write(json.dumps(record))
+    save_file.write(json.dumps(record, indent=4))
     save_file.close()
-
+    
+    plt.close("all")
     temp_plot = plt.figure("FUNC 1, Voltage:%f, Light:%f" % (V0, Light))
     plt.subplot(221)
+    plt.title("Therm vs. Time")
     plt.plot(data["Time"], data["Thermistor"])
     plt.subplot(222)
+    plt.title("Cur vs. Time")
     plt.plot(data["Time"], data["Current"])
     plt.subplot(223)
+    plt.title("Cur vs. Therm")
     plt.plot(data["Thermistor"], data["Current"])
     plt.pause(0.05)
     temp_plot.show()
@@ -156,7 +160,7 @@ INIT
 """ % (V0, V1, num, delay))
             raw_data_1 = SourceMeter.query('TRAC:DATA? 1, %f, "defbuffer1", SOUR, READ, REL' % num)
             end_therm_1 = float( ResistoMeter.query("READ?") )
-            scan_time_1 = time.gmtime()
+            scan_time_1 = time.localtime()
 
             if both_ways:
                 start_therm_2 = float( ResistoMeter.query("READ?") )
@@ -168,7 +172,7 @@ INIT
 """ % (V1, V0, num, delay))
                 raw_data_2 = SourceMeter.query('TRAC:DATA? 1, %f, "defbuffer2", SOUR, READ, REL' % num)
                 end_therm_2 = float( ResistoMeter.query("READ?") )
-                scan_time_2 = time.gmtime()
+                scan_time_2 = time.localtime()
 
             SourceMeter.write("""
 SOUR:VOLT 0
@@ -191,17 +195,22 @@ OUTP:STAT OFF
             record["Light current"] = intens
             record["data"] = dict()
             record["data"].update( data )
-            file_name = config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.gmtime()) + ".txt"
+            file_name = "F2_" + config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.localtime()) + ".txt"
             save_file = open(file_name, "w")
-            save_file.write(json.dumps(record))
+            save_file.write(json.dumps(record, indent=4))
             save_file.close()
+            
 
+            plt.close("all")
             temp_plot_1 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V0, V1, intens))
             plt.subplot(221)
+            plt.title("Cur vs. Time")
             plt.plot(data["Time"], data["Current"])
             plt.subplot(222)
+            plt.title("V vs. Time")
             plt.plot(data["Time"], data["Voltage"])
             plt.subplot(223)
+            plt.title("I vs. V")
             plt.plot(data["Voltage"], data["Current"])
             plt.pause(0.05)
             temp_plot_1.show()
@@ -223,17 +232,21 @@ OUTP:STAT OFF
                 record["Light current"] = intens
                 record["data"] = dict()
                 record["data"].update( data )
-                file_name = config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.gmtime()) + ".txt"
+                file_name = "F2_"+config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.localtime()) + ".txt"
                 save_file = open(file_name, "w")
-                save_file.write(json.dumps(record))
+                save_file.write(json.dumps(record, indent=4))
                 save_file.close()
+                
 
                 temp_plot_2 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V1, V0, intens))
                 plt.subplot(221)
-                plt.plot(data["Time"], data["Thermistor"])
+                plt.title("Cur vs. Time")
+                plt.plot(data["Time"], data["Current"])
                 plt.subplot(222)
+                plt.title("V vs. Time")
                 plt.plot(data["Time"], data["Voltage"])
                 plt.subplot(223)
+                plt.title("I vs. V")
                 plt.plot(data["Voltage"], data["Current"])
                 plt.pause(0.05)
                 temp_plot_2.show()
@@ -282,7 +295,7 @@ OUTP:STAT ON
             data["Thermistor"].append(float( therm_reading ))
             data["Count"] += 1
             print("Func 3 points measured: ", data["Count"], " ", time.time() - start_time)
-            time.sleep(0.01)
+            time.sleep(0.001)
 
         SourceMeter.write("""
 SOUR:VOLT 0
@@ -303,7 +316,7 @@ OUTP:STAT ON
             print("Func 3 points measured: ", data["Count"], " ", time.time() - start_time)
             time.sleep(0.01)
 
-        scan_time = time.gmtime()
+        scan_time = time.localtime()
         # Save data
         record = dict()
         record.update(config["Save Header"])
@@ -314,17 +327,21 @@ OUTP:STAT ON
         record["Light current"] = intens
         record["data"] = dict()
         record["data"].update( data )
-        file_name = config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.gmtime()) + ".txt"
+        file_name = "F3_"+config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.localtime()) + ".txt"
         save_file = open(file_name, "w")
-        save_file.write(json.dumps(record))
+        save_file.write(json.dumps(record, indent=4))
         save_file.close()
 
+        plt.close("all")
         temp_plot = plt.figure("FUNC 3, Volt: %f, Duration: %f, Light: %f" % (V0, duration, intens))
         plt.subplot(221)
+        plt.title("Therm vs. Time")
         plt.plot(data["Time"], data["Thermistor"])
         plt.subplot(222)
+        plt.title("V vs. Time")
         plt.plot(data["Time"], data["Voltage"])
         plt.subplot(223)
+        plt.title("Cur vs. Time")
         plt.plot(data["Time"], data["Current"])
         plt.pause(0.05)
         temp_plot.show()

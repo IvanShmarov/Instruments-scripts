@@ -33,12 +33,12 @@
     },
     "Func 3": {
         "V0": 0.7,
-        "Time": 3
+        "Time": 7
     },
     "Save Header": {
-        "Creator": "Test Creator",
-        "Label": "Test Label",
-        "Composition": "Some stuff",
+        "Creator": "ISh",
+        "Label": "ISH_02",
+        "Composition": "MAPI",
         "Pixel": 1
     }
 }
