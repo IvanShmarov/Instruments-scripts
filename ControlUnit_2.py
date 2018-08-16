@@ -32,11 +32,13 @@ def thread_caller(seq):
             the_thread._target = thread_caller
         the_thread.start()
     else:
-        print("Done")
+        print("Done\n")
         SourceMeter.write("""
 OUTP:STATE OFF
 """)
         LightSource.write("OUTP OFF")
+        input("Input enything to finish the program\n")
+        plt.close("all")
         
 
 def Func_1(seq):
@@ -98,7 +100,6 @@ OUTP:STAT OFF
     save_file.write(json.dumps(record))
     save_file.close()
 
-    plt.close("all")
     temp_plot = plt.figure("FUNC 1, Voltage:%f, Light:%f" % (V0, Light))
     plt.subplot(221)
     plt.plot(data["Time"], data["Thermistor"])
@@ -195,7 +196,6 @@ OUTP:STAT OFF
             save_file.write(json.dumps(record))
             save_file.close()
 
-            plt.close("all")
             temp_plot_1 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V0, V1, intens))
             plt.subplot(221)
             plt.plot(data["Time"], data["Current"])
@@ -319,7 +319,6 @@ OUTP:STAT ON
         save_file.write(json.dumps(record))
         save_file.close()
 
-        plt.close("all")
         temp_plot = plt.figure("FUNC 3, Volt: %f, Duration: %f, Light: %f" % (V0, duration, intens))
         plt.subplot(221)
         plt.plot(data["Time"], data["Thermistor"])
