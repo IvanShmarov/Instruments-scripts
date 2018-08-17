@@ -237,7 +237,7 @@ OUTP:STAT OFF
                 save_file.write(json.dumps(record, indent=4))
                 save_file.close()
                 
-
+                plt.close("all")
                 temp_plot_2 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V1, V0, intens))
                 plt.subplot(221)
                 plt.title("Cur vs. Time")

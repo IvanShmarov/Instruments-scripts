@@ -17,7 +17,7 @@
         "Sun_Current": 0.3182
     },
     "Func 1": {
-        "V0": 0.05,
+        "V0": 1.5,
         "Light": 0
     },
     "Func 2": {
@@ -26,19 +26,19 @@
         "Temp Step": 5,
         "Light Ints": [0, 0.01, 0.1, 0.5, 1],
         "V0": 0,
-        "V1": 0.05,
+        "V1": 1.5,
         "Num": 101,
         "delay": 0.01,
-        "Both_ways": false
+        "Both_ways": true
     },
     "Func 3": {
-        "V0": 0.7,
+        "V0": 1.5,
         "Time": 7
     },
     "Save Header": {
-        "Creator": "ISh",
-        "Label": "ISH_02",
-        "Composition": "MAPI",
-        "Pixel": 1
+        "Creator": "SIP",
+        "Label": "SIP007_07",
+        "Composition": "unknown",
+        "Pixel": 3
     }
 }
