@@ -61,7 +61,7 @@ OUTP:STAT ON
     chamber_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
 
     # Do many measurements
-    while chamber_temp > 78.0:
+    while chamber_temp > 80.0:
         source_reading = SourceMeter.query("READ? \"defbuffer1\", SOUR, READ, REL").split(",")
         therm_reading = ResistoMeter.query("READ?")
 
