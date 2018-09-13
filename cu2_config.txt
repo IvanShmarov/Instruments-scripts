@@ -9,7 +9,7 @@
     },
     "Mercury": {
         "INI": "SET:DEV:MB1.T1:TEMP:LOOP:PIDT:ON\nSET:DEV:MB1.T1:TEMP:LOOP:ENAB:ON\nSET:DEV:MB1.T1:TEMP:LOOP:TSET:%f",
-        "PAR": [273.15]
+        "PAR": [290]
     },
     "LightSource": {
         "INI": "OUTP OFF\nVOLT 38.5\nCURR 0.0\nOUTP ON",
@@ -17,12 +17,12 @@
         "Sun_Current": 0.3182
     },
     "Func 1": {
-        "V0": 1.5,
+        "V0": 0,
         "Light": 0
     },
     "Func 2": {
-        "Temp Start": 80,
-        "Temp End": 290,
+        "Temp Start": 150,
+        "Temp End": 250,
         "Temp Step": 5,
         "Light Ints": [0, 0.01, 0.1, 0.5, 1],
         "V0": 0,
@@ -38,7 +38,7 @@
     "Save Header": {
         "Creator": "SIP",
         "Label": "SIP007_07",
-        "Composition": "unknown",
-        "Pixel": 3
+        "Composition": "spiro c1 @2000rpm",
+        "Pixel": 1
     }
 }

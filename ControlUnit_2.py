@@ -27,6 +27,10 @@ def thread_caller(seq):
             the_thread._target = Func_2
         elif seq[0] == 3:
             the_thread._target = Func_3
+        elif seq[0] == 4:
+            the_thread._target = Func_4
+        elif seq[0] == 5:
+            the_thread._target = Func_5
         else:
             print("INVALID!!!!!!!: ", seq[0])
             the_thread._target = thread_caller
@@ -101,18 +105,18 @@ OUTP:STAT OFF
     save_file.close()
     
     plt.close("all")
-    temp_plot = plt.figure("FUNC 1, Voltage:%f, Light:%f" % (V0, Light))
-    plt.subplot(221)
-    plt.title("Therm vs. Time")
-    plt.plot(data["Time"], data["Thermistor"])
-    plt.subplot(222)
-    plt.title("Cur vs. Time")
-    plt.plot(data["Time"], data["Current"])
-    plt.subplot(223)
-    plt.title("Cur vs. Therm")
-    plt.plot(data["Thermistor"], data["Current"])
-    plt.pause(0.05)
-    temp_plot.show()
+##    temp_plot = plt.figure("FUNC 1, Voltage:%f, Light:%f" % (V0, Light))
+##    plt.subplot(221)
+##    plt.title("Therm vs. Time")
+##    plt.plot(data["Time"], data["Thermistor"])
+##    plt.subplot(222)
+##    plt.title("Cur vs. Time")
+##    plt.plot(data["Time"], data["Current"])
+##    plt.subplot(223)
+##    plt.title("Cur vs. Therm")
+##    plt.plot(data["Thermistor"], data["Current"])
+##    plt.pause(0.05)
+##    temp_plot.show()
 
     
     # Call next function
@@ -202,18 +206,18 @@ OUTP:STAT OFF
             
 
             plt.close("all")
-            temp_plot_1 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V0, V1, intens))
-            plt.subplot(221)
-            plt.title("Cur vs. Time")
-            plt.plot(data["Time"], data["Current"])
-            plt.subplot(222)
-            plt.title("V vs. Time")
-            plt.plot(data["Time"], data["Voltage"])
-            plt.subplot(223)
-            plt.title("I vs. V")
-            plt.plot(data["Voltage"], data["Current"])
-            plt.pause(0.05)
-            temp_plot_1.show()
+##            temp_plot_1 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V0, V1, intens))
+##            plt.subplot(221)
+##            plt.title("Cur vs. Time")
+##            plt.plot(data["Time"], data["Current"])
+##            plt.subplot(222)
+##            plt.title("V vs. Time")
+##            plt.plot(data["Time"], data["Voltage"])
+##            plt.subplot(223)
+##            plt.title("I vs. V")
+##            plt.plot(data["Voltage"], data["Current"])
+##            plt.pause(0.05)
+##            temp_plot_1.show()
             
             if both_ways:
                 raw_data_2 = raw_data_2.split(",")
@@ -238,18 +242,18 @@ OUTP:STAT OFF
                 save_file.close()
                 
                 plt.close("all")
-                temp_plot_2 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V1, V0, intens))
-                plt.subplot(221)
-                plt.title("Cur vs. Time")
-                plt.plot(data["Time"], data["Current"])
-                plt.subplot(222)
-                plt.title("V vs. Time")
-                plt.plot(data["Time"], data["Voltage"])
-                plt.subplot(223)
-                plt.title("I vs. V")
-                plt.plot(data["Voltage"], data["Current"])
-                plt.pause(0.05)
-                temp_plot_2.show()
+##                temp_plot_2 = plt.figure("FUNC 2, Temp: %f, Volt: %f->%f, Light: %f" % (temp, V1, V0, intens))
+##                plt.subplot(221)
+##                plt.title("Cur vs. Time")
+##                plt.plot(data["Time"], data["Current"])
+##                plt.subplot(222)
+##                plt.title("V vs. Time")
+##                plt.plot(data["Time"], data["Voltage"])
+##                plt.subplot(223)
+##                plt.title("I vs. V")
+##                plt.plot(data["Voltage"], data["Current"])
+##                plt.pause(0.05)
+##                temp_plot_2.show()
 
         LightSource.write("CURR 0")
     # Switch stuff off
@@ -354,6 +358,168 @@ OUTP:STAT ON
     print("Func caller")
     thread_caller(seq)
     print("\nEnding function 3")
+
+def Func_4(seq):
+    print("\nStarting function 4")
+    for v in [i * 0.05 for i in range(31)]:
+        print("Doing for voltage %f" % v)
+        data = {"Count": 0,"Voltage":[], "Current":[], "Time":[], "Thermistor":[]}
+
+        # Cool down with 1.5 V
+        SourceMeter.write("""
+    TRAC:CLE
+    SOUR:VOLT %.3f
+    OUTP:STAT ON
+    """ % v)
+
+    ##    print(Mercury.query("SET:DEV:MB1.T1:TEMP:LOOP:TSET:190"))
+    ##    chamber_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
+    ##    while abs(chamber_temp - 190) > 1.5:
+    ##        time.sleep(1)
+    ##        chamber_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
+    ##        print("Cooling down\n")
+    ##        print(SourceMeter.query("READ? \"defbuffer1\", SOUR, READ, REL").split(",")[0])
+        start_time = time.clock()
+        while time.clock() - start_time < 600:
+            time.sleep(0.5)
+            print(SourceMeter.query("READ? \"defbuffer1\", SOUR, READ, REL").split(",")[0])
+        # Warm up with 0V
+        SourceMeter.write("""
+    TRAC:CLE
+    SOUR:VOLT 0
+    OUTP:STAT ON
+    """)
+    ##    print(Mercury.query("SET:DEV:MB1.T1:TEMP:LOOP:TSET:225"))
+    ##    chamber_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
+    ##    while abs(chamber_temp - 225) > 1.5:
+    ##        time.sleep(1)
+    ##        chamber_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
+    ##        print("Warming up\n")
+    ##        print(SourceMeter.query("READ? \"defbuffer1\", SOUR, READ, REL").split(",")[0])
+        # Set the light source and measure current with time
+        LightSource.write("CURR %f" % (config["LightSource"]["Sun_Current"] * 0.005))
+        start_time = time.clock()
+        while time.clock() - start_time < 1200:
+            source_reading = SourceMeter.query("READ? \"defbuffer1\", SOUR, READ, REL").split(",")
+            therm_reading = ResistoMeter.query("READ?")
+            
+            data["Voltage"].append(float( source_reading[0] ))
+            data["Current"].append(float( source_reading[1] ))
+            data["Time"].append(float( source_reading[2] ))
+            data["Thermistor"].append(float( therm_reading ))
+            data["Count"] += 1
+            print("Func 4 points measured: ", data["Count"])
+
+            time.sleep(0.1)
+
+        scan_time = time.localtime()
+        LightSource.write("CURR 0" )
+
+        record = dict()
+        record.update(config["Save Header"])
+        record["Type"] = "FUNC 4"
+        record["Time"] = time.asctime(scan_time)
+        record["Light current"] = config["LightSource"]["Sun_Current"] * 0.005
+        record["data"] = dict()
+        record["data"].update( data )
+        file_name = "F4_" + ("%.2f" % v) + "V_" + config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.localtime()) + ".txt"
+        save_file = open(file_name, "w")
+        save_file.write(json.dumps(record, indent=4))
+        save_file.close()
+
+        LightSource.write("CURR %f" % 0)
+
+    LightSource.write("OUTP OFF")
+    SourceMeter.write("OUTP:STAT OFF")
+    # Call next function
+    print("Func caller")
+    thread_caller(seq)
+    print("\nEnding function 4")
+
+
+def Func_5(seq):
+    print("\nStarting function 5")
+    
+    # STEP 1 1.5 V to 190 K
+    SourceMeter.write("""
+TRAC:CLE
+SOUR:VOLT %.3f
+OUTP:STAT ON
+""")
+    print(Mercury.query("SET:DEV:MB1.T1:TEMP:LOOP:TSET:190"))
+    chamber_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
+    while abs(chamber_temp - 190) > 1.5:
+        time.sleep(1)
+        chamber_temp = float( Mercury.query("READ:DEV:MB1.T1:TEMP:SIG:TEMP")[30:-2] )
+        print("Cooling down\n")
+        print(SourceMeter.query("READ? \"defbuffer1\", SOUR, READ, REL").split(",")[0])
+    # __________________________________________________________________________________________
+
+    # LOOP
+    for i in range(5):
+        # STEP 2
+        data = {"Count": 0,"Voltage":[], "Current":[], "Time":[]}
+        raw_data_1 = ""
+        raw_data_2 = ""
+        # Forward
+        SourceMeter.write("""
+TRAC:CLE "defbuffer1"
+SOUR:SWE:VOLT:LIN 0, 1.5, 101, 0.01, 1, BEST, OFF, OFF, "defbuffer1"
+INIT
+*WAI
+""" )
+        raw_data_1 = SourceMeter.query('TRAC:DATA? 1, 101, "defbuffer1", SOUR, READ, REL')
+        scan_time_1 = time.localtime()
+        # Backward
+        SourceMeter.write("""
+TRAC:CLE "defbuffer1"
+SOUR:SWE:VOLT:LIN 1.5, 0, 101, 0.01, 1, BEST, OFF, OFF, "defbuffer1"
+INIT
+*WAI
+""" )
+        raw_data_2 = SourceMeter.query('TRAC:DATA? 1, 101, "defbuffer1", SOUR, READ, REL')
+        scan_time_2 = time.localtime()
+
+        # Saving
+        data["Count"] = 101
+        data["Voltage"] = [float(item) for item in raw_data_1[0::3]]
+        data["Current"] = [float(item) for item in raw_data_1[1::3]]
+        data["Time"] = [float(item) for item in raw_data_1[2::3]]
+
+        record = dict()
+        record.update(config["Save Header"])
+        record["Type"] = "FUNC 5 V0->V1"
+        record["Time"] = time.asctime(scan_time_1)
+        record["Light current"] = intens
+        record["data"] = dict()
+        record["data"].update( data )
+        file_name = "F5 _1F_" + config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.localtime()) + ".txt"
+        save_file = open(file_name, "w")
+        save_file.write(json.dumps(record, indent=4))
+        save_file.close()
+
+        data["Count"] = 101
+        data["Voltage"] = [float(item) for item in raw_data_2[0::3]]
+        data["Current"] = [float(item) for item in raw_data_2[1::3]]
+        data["Time"] = [float(item) for item in raw_data_2[2::3]]
+
+        record = dict()
+        record.update(config["Save Header"])
+        record["Type"] = "FUNC 5 V1->V0"
+        record["Time"] = time.asctime(scan_time_2)
+        record["Light current"] = intens
+        record["data"] = dict()
+        record["data"].update( data )
+        file_name = "F5 _1B_" + config["Save Header"]["Label"] + "_" + time.strftime("[%d_%m]_(%H_%M_%S)", time.localtime()) + ".txt"
+        save_file = open(file_name, "w")
+        save_file.write(json.dumps(record, indent=4))
+        save_file.close()
+
+    
+    # Call next function
+    print("Func caller")
+    thread_caller(seq)
+    print("\nEnding function 5")
 
 # ACTION
 
